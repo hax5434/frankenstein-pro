@@ -395,7 +395,7 @@ const FrequencyTable = ({ data }) => {
                     </button>
                 </Tooltip>
             </div>
-            <div className="flex-grow overflow-y-auto border dark:border-gray-700 rounded-md">
+            <div className="flex-grow overflow-auto border dark:border-gray-700 rounded-md">
                 <table className="w-full text-sm text-left text-gray-600 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-800 sticky top-0">
                         <tr>
@@ -592,10 +592,10 @@ export default function App() {
         <div className="min-h-screen bg-gray-100 dark:bg-gray-950 font-sans text-gray-900 transition-colors duration-300">
             <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-20">
                 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200">
                         Frankenstein <span className="text-orange-500">Pro</span> v5
                     </h1>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                         <motion.button 
                             onClick={openCoffeeModal}
                             whileHover={{ scale: 1.1 }}
@@ -603,7 +603,7 @@ export default function App() {
                             className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
                         >
                             <Coffee size={18} className="text-orange-500"/>
-                            <span>Buy me a coffee</span>
+                            <span className="hidden sm:inline">Buy me a coffee</span>
                         </motion.button>
                         <ThemeSwitcher theme={theme} setTheme={setTheme} />
                     </div>
@@ -611,14 +611,14 @@ export default function App() {
             </header>
 
             <main className="container mx-auto p-4 lg:p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column: Options */}
-                    <div className="lg:col-span-1 h-full lg:max-h-[calc(100vh-150px)]">
+                    <div className="lg:col-span-1 lg:max-h-[calc(100vh-150px)]">
                         <KeywordOptions options={options} setOptions={setOptions} />
                     </div>
 
                     {/* Middle Column: Input/Output */}
-                    <div className="lg:col-span-1 h-full lg:max-h-[calc(100vh-150px)]">
+                    <div className="lg:col-span-1 lg:max-h-[calc(100vh-150px)]">
                         <KeywordIO
                             rawKeywords={rawKeywords}
                             setRawKeywords={setRawKeywords}
@@ -630,7 +630,7 @@ export default function App() {
                     </div>
 
                     {/* Right Column: Frequency */}
-                    <div className="lg:col-span-1 h-full lg:max-h-[calc(100vh-150px)]">
+                    <div className="lg:col-span-1 lg:max-h-[calc(100vh-150px)]">
                         <FrequencyTable data={frequencyData} />
                     </div>
                 </div>
