@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Copy, Trash2, Linkedin, User, ChevronDown, ChevronUp, Sparkles, X, Loader2, Sun, Moon, Coffee } from 'lucide-react';
+import { Download, Copy, Trash2, Linkedin, User, ChevronDown, ChevronUp, X, Sun, Moon, Coffee } from 'lucide-react';
 
 // --- Helper Data ---
 const COMMON_WORDS = new Set([
@@ -169,7 +169,7 @@ const Section = ({ title, children, defaultOpen = false }) => {
   );
 };
 
-const KeywordOptions = ({ options, setOptions, aiActions, isAiLoading }) => {
+const KeywordOptions = ({ options, setOptions }) => {
   const handleOptionChange = (option) => (e) => {
     setOptions(prev => ({ ...prev, [option]: e.target.checked }));
   };
@@ -195,21 +195,6 @@ const KeywordOptions = ({ options, setOptions, aiActions, isAiLoading }) => {
     }))
   }
 
-  const AiButton = ({ onClick, children }) => (
-    <button
-      onClick={onClick}
-      disabled={isAiLoading}
-      className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors dark:bg-orange-900/50 dark:text-orange-300 dark:hover:bg-orange-900"
-    >
-      {isAiLoading ? (
-        <Loader2 size={20} className="animate-spin mr-2" />
-      ) : (
-        <Sparkles size={16} className="mr-2" />
-      )}
-      {children}
-    </button>
-  );
-
   return (
     <div className="w-full h-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-y-auto">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -217,14 +202,7 @@ const KeywordOptions = ({ options, setOptions, aiActions, isAiLoading }) => {
         <p className="text-sm text-gray-500 dark:text-gray-400">Select transformations to apply.</p>
       </div>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <Section title="✨ AI-Powered Tools" defaultOpen={true}>
-            <AiButton onClick={aiActions.handleExpandKeywords}>Expand Keyword List</AiButton>
-            <AiButton onClick={aiActions.handleGroupKeywords}>Group by Intent</AiButton>
-            <AiButton onClick={aiActions.handleCreateAdCopy}>Create Ad Copy</AiButton>
-            <AiButton onClick={aiActions.handleSummarize}>Summarize to 200 Chars</AiButton>
-        </Section>
-        
-        <Section title="Remove Words">
+        <Section title="Remove Words" defaultOpen={true}>
           <CustomCheckbox id="removeDuplicates" label="Remove Duplicate Words" checked={options.removeDuplicates} onChange={handleOptionChange('removeDuplicates')} />
           <CustomCheckbox id="removeSingleLetters" label="Remove Single-Letter Words" checked={options.removeSingleLetters} onChange={handleOptionChange('removeSingleLetters')} />
           <CustomCheckbox id="removeMultiLetters" label="Keep Only Single-Letter Words" checked={options.removeMultiLetters} onChange={handleOptionChange('removeMultiLetters')} />
@@ -373,7 +351,7 @@ const KeywordIO = ({ rawKeywords, setRawKeywords, processedKeywords, onProcess, 
                         </Tooltip>
                         <Tooltip text={copied ? "Copied!" : "Copy to Clipboard"}>
                             <button onClick={handleCopy} className="p-2 text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 hover:bg-orange-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                                {copied ? <motion.div initial={{scale:0}} animate={{scale:1}}><Check size={18} className="text-green-500" /></motion.div> : <Copy size={18} />}
+                                {copied ? <motion.div initial={{scale:0}} animate={{scale:1}}><Copy size={18} className="text-green-500" /></motion.div> : <Copy size={18} />}
                             </button>
                         </Tooltip>
                     </div>
@@ -539,7 +517,6 @@ export default function App() {
     const [rawKeywords, setRawKeywords] = useState('');
     const [processedKeywords, setProcessedKeywords] = useState('');
     const [frequencyData, setFrequencyData] = useState([]);
-    const [isAiLoading, setIsAiLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContent, setModalContent] = useState(null);
     const [modalTitle, setModalTitle] = useState('');
@@ -587,137 +564,6 @@ export default function App() {
         const freq = calculateFrequency(rawKeywords);
         setFrequencyData(freq);
     }, [rawKeywords, options]);
-    
-    // --- Gemini API Call Logic ---
-    const callGemini = async (payload) => {
-        setIsAiLoading(true);
-        try {
-            const apiKey = ""; // Canvas will provide this
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) {
-                const errorBody = await response.json();
-                console.error("API Error Body:", errorBody);
-                throw new Error(`API call failed with status: ${response.status}`);
-            }
-            const result = await response.json();
-            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                console.error("Unexpected API response structure:", result);
-                throw new Error("Could not extract text from API response.");
-            }
-        } catch (error) {
-            console.error("Gemini API call error:", error);
-            setModalTitle("Error");
-            setModalContent(<p className="text-red-500">An error occurred: {error.message}</p>);
-            setIsModalOpen(true);
-            return null;
-        } finally {
-            setIsAiLoading(false);
-        }
-    };
-
-    const handleExpandKeywords = async () => {
-        if (!rawKeywords.trim()) return;
-        const prompt = `You are an Amazon SEO expert. Given the following keywords, generate 50 more highly relevant and related keywords for an Amazon product listing. Return only the new keywords, separated by spaces. Keywords: ${rawKeywords}`;
-        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const result = await callGemini(payload);
-        if (result) {
-            setRawKeywords(prev => `${prev}\n${result}`);
-        }
-    };
-
-    const handleGroupKeywords = async () => {
-        if (!processedKeywords.trim()) return;
-        const prompt = `You are an Amazon SEO expert. Analyze this list of keywords and group them by customer intent or logical category. Keywords: ${processedKeywords}`;
-        const payload = {
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: "ARRAY",
-                    items: {
-                        type: "OBJECT",
-                        properties: {
-                            groupName: { type: "STRING", description: "The name of the keyword group (e.g., 'Color Variations', 'Competitor Brands')." },
-                            keywords: { type: "ARRAY", items: { type: "STRING" } }
-                        },
-                        required: ["groupName", "keywords"]
-                    }
-                }
-            }
-        };
-        const result = await callGemini(payload);
-        if (result) {
-            try {
-                const parsedResult = JSON.parse(result);
-                const formattedContent = (
-                    <div className="space-y-4">
-                        {parsedResult.map((group, index) => (
-                            <div key={index}>
-                                <h3 className="font-bold text-md text-gray-800 dark:text-gray-200 mb-2">{group.groupName}</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {group.keywords.map((kw, kwIndex) => (
-                                        <span key={kwIndex} className="bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 text-xs font-medium px-2.5 py-0.5 rounded-full">{kw}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                );
-                setModalTitle("✨ Keyword Groups by Intent");
-                setModalContent(formattedContent);
-                setIsModalOpen(true);
-            } catch (e) {
-                 setModalTitle("Error");
-                 setModalContent(<p className="text-red-500">Failed to parse the AI response. Please try again.</p>);
-                 setIsModalOpen(true);
-            }
-        }
-    };
-
-    const handleCreateAdCopy = async () => {
-        if (!processedKeywords.trim()) return;
-        const prompt = `You are a professional copywriter specializing in Amazon PPC ads. Using the following keywords, write 5 compelling, short, and high-converting ad headlines. Each headline should be on a new line. Keywords: ${processedKeywords}`;
-        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const result = await callGemini(payload);
-        if (result) {
-            const formattedContent = (
-                <ul className="list-disc list-inside space-y-2">
-                    {result.split('\n').filter(line => line.trim() !== '').map((line, index) => (
-                        <li key={index}>{line}</li>
-                    ))}
-                </ul>
-            );
-            setModalTitle("✨ Generated Ad Copy");
-            setModalContent(formattedContent);
-            setIsModalOpen(true);
-        }
-    };
-    
-    const handleSummarize = async () => {
-        if (!processedKeywords.trim()) return;
-        const prompt = `You are an Amazon SEO expert. Analyze the following list of keywords and summarize it into the most powerful and high-ranking keywords possible. The final output must be a single line of text and strictly under 200 characters including spaces. Keywords: ${processedKeywords}`;
-        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const result = await callGemini(payload);
-        if (result) {
-            setModalTitle("✨ AI-Powered Summary (< 200 Chars)");
-            setModalContent(
-                <div>
-                    <p className="mb-4">{result}</p>
-                    <button onClick={() => { navigator.clipboard.writeText(result); setIsModalOpen(false); }} className="w-full px-4 py-2 bg-orange-500 text-white font-bold rounded-md hover:bg-orange-600 transition">
-                        Copy Summary
-                    </button>
-                </div>
-            );
-            setIsModalOpen(true);
-        }
-    };
 
     const openCoffeeModal = () => {
         setModalTitle("Buy me a coffee");
@@ -733,8 +579,6 @@ export default function App() {
         );
         setIsModalOpen(true);
     };
-    
-    const aiActions = { handleExpandKeywords, handleGroupKeywords, handleCreateAdCopy, handleSummarize };
 
     const { wordCount, charCount } = useMemo(() => {
         const words = processedKeywords.split(/\s+/).filter(Boolean);
@@ -770,7 +614,7 @@ export default function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     {/* Left Column: Options */}
                     <div className="lg:col-span-1 h-full lg:max-h-[calc(100vh-150px)]">
-                        <KeywordOptions options={options} setOptions={setOptions} aiActions={aiActions} isAiLoading={isAiLoading} />
+                        <KeywordOptions options={options} setOptions={setOptions} />
                     </div>
 
                     {/* Middle Column: Input/Output */}
