@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Copy, Trash2, Linkedin, User, ChevronDown, ChevronUp, Sparkles, X, LoaderCircle, Sun, Moon, Coffee } from 'lucide-react';
+import { Download, Copy, Trash2, Linkedin, User, ChevronDown, ChevronUp, Sparkles, X, Loader2, Sun, Moon, Coffee } from 'lucide-react';
 
 // --- Helper Data ---
 const COMMON_WORDS = new Set([
@@ -202,7 +202,7 @@ const KeywordOptions = ({ options, setOptions, aiActions, isAiLoading }) => {
       className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors dark:bg-orange-900/50 dark:text-orange-300 dark:hover:bg-orange-900"
     >
       {isAiLoading ? (
-        <LoaderCircle size={20} className="animate-spin mr-2" />
+        <Loader2 size={20} className="animate-spin mr-2" />
       ) : (
         <Sparkles size={16} className="mr-2" />
       )}
